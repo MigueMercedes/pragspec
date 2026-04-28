@@ -54,6 +54,7 @@ program
     `Comma-separated extensions to enable. Valid: ${EXTENSIONS.map((e) => e.id).join(', ')}`
   )
   .option('--skill-only', 'Only install the .claude/skills/sdd/ skill (no templates)', false)
+  .option('--ask', 'Force the interactive prompts even when an existing project is detected', false)
   .option('--overwrite', 'Overwrite existing files instead of skipping', false)
   .option('--no-gitignore', 'Do not modify .gitignore')
   .action(async (opts) => {
@@ -90,8 +91,6 @@ program
         addToGitignore: opts.gitignore !== false,
         onConflict: /** @type {'overwrite'|'skip'} */ (opts.overwrite ? 'overwrite' : 'skip'),
       };
-      // `opts.ask` is declared in Task 4; undefined here is falsy, so the
-      // auto-detect branch correctly skips when the user passes --ask later.
     } else if (!opts.ask && (await isExistingProject(cwd))) {
       console.log(kleur.dim('Detected existing project — deferring stack/extension detection to the `sdd` skill.'));
       const proceed = await askConfirmInstall({ cwd });
