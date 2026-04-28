@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { installTemplates, appendGitignore, EXTENSIONS, isValidExtensionId } from '../lib/install.js';
+import { installTemplates, appendGitignore, isExistingProject, EXTENSIONS, isValidExtensionId } from '../lib/install.js';
 
 /** @type {string} */
 let tmpDir;
@@ -148,7 +148,7 @@ describe('extensions', () => {
     expect(isValidExtensionId('not-a-real-extension')).toBe(false);
   });
 
-  it('does NOT copy individual extension fragments to destination', async () => {
+  it('DOES copy individual extension fragments to destination', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS });
     // README.md is the catalog — should be copied
     const catalogExists = await fs
@@ -156,13 +156,13 @@ describe('extensions', () => {
       .then(() => true)
       .catch(() => false);
     expect(catalogExists, 'extensions/README.md (catalog) should exist').toBe(true);
-    // Individual fragments should NOT be copied
+    // Individual fragments SHOULD be copied so the sdd skill can merge them on-demand
     for (const ext of EXTENSIONS) {
       const fragExists = await fs
         .access(path.join(tmpDir, `specs/templates/extensions/${ext.id}.md`))
         .then(() => true)
         .catch(() => false);
-      expect(fragExists, `extensions/${ext.id}.md fragment should NOT be copied at destination`).toBe(false);
+      expect(fragExists, `extensions/${ext.id}.md fragment should exist at destination`).toBe(true);
     }
   });
 
@@ -249,5 +249,36 @@ describe('appendGitignore', () => {
     );
     const result = await appendGitignore(tmpDir);
     expect(result.added).toBe(false);
+  });
+});
+
+describe('isExistingProject', () => {
+  it('returns false for an empty directory', async () => {
+    expect(await isExistingProject(tmpDir)).toBe(false);
+  });
+
+  it('returns true when package.json exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'package.json'), '{}');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when pyproject.toml exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'pyproject.toml'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when Cargo.toml exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'Cargo.toml'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when go.mod exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'go.mod'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when .git directory exists', async () => {
+    await fs.mkdir(path.join(tmpDir, '.git'));
+    expect(await isExistingProject(tmpDir)).toBe(true);
   });
 });

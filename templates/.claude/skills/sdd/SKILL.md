@@ -36,10 +36,22 @@ If the project's `CLAUDE.md` has unresolved `{{PLACEHOLDERS}}` (recently scaffol
    - `{{REPO_LAYOUT}}` → tree of top-level directories with one-line description each
    - `{{CONSTRAINTS}}` → ask the user 3-4 questions about product-specific constraints (auth provider? notification channels? compliance? performance budgets? browser support?)
 
-3. **Confirm spec extensions enabled**. Look at `specs/templates/feature.spec.md`:
-   - Check the comment near the top: `<!-- Extensions enabled: ... -->` (added by `claude-sdd init`)
-   - If MISSING extensions that obviously apply to this project (e.g. project clearly uses a DB but `persistent-data` not enabled), suggest the user enable them by re-running `claude-sdd init --skill-only --extensions <list>` or by manually appending the relevant `specs/templates/extensions/<id>.md` content
-   - If extensions are enabled that DON'T apply (rare — usually user enables intentionally), no action
+3. **Detect & propose extensions.** Look at `specs/templates/feature.spec.md`:
+   - Check the `<!-- Extensions enabled: ... -->` comment near the top, if any.
+   - Run the heuristics below against the codebase. For each extension whose heuristic matches, propose it to the user.
+
+   | Extension | Heuristic — propose if any are true |
+   |---|---|
+   | `multi-tenant` | Code or schemas reference `tenant_id`, `business_id`, `account_id`, `workspace_id`, or `org_id` as a foreign key / scope. |
+   | `persistent-data` | Repo has `migrations/`, `alembic/`, `prisma/`, `drizzle/`, `schema.sql`, or an ORM dependency (sequelize, typeorm, prisma, sqlalchemy, alembic, gorm, diesel). |
+   | `production-rollout` | Code references feature flags (`launchdarkly`, `growthbook`, `unleash`, env-var gated `FEATURE_*`). |
+   | `operational` | Project has `Dockerfile` + observability deps (datadog, sentry, opentelemetry, prom_client) or a `runbooks/` directory. |
+   | `external-deps` | Code calls third-party APIs (stripe, paddle, twilio, sendgrid) or has webhook handlers. |
+   | `public-api` | Project is a library (no top-level app entry, has `main`/`exports` in `package.json`, or publishes to npm/PyPI). |
+
+   - Show the user the proposed list with one-line rationale per match: "Propose `persistent-data` because alembic/ exists." Ask which to enable. Default = all matches.
+   - For each confirmed extension, append the fragment from `specs/templates/extensions/<id>.md` into `specs/templates/feature.spec.md` immediately before the `## Review notes` heading. If a marker comment `<!-- Extensions enabled: ... -->` already exists, update its list; otherwise add it after the front-matter.
+   - If no extensions match, say so and skip — `feature.spec.md` stays lean.
 
 4. If applicable, generate the first `docs/adr/0001-<area>.md` placeholder with the project context as a starting ADR
 
