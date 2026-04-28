@@ -148,7 +148,7 @@ describe('extensions', () => {
     expect(isValidExtensionId('not-a-real-extension')).toBe(false);
   });
 
-  it('does NOT copy individual extension fragments to destination', async () => {
+  it('DOES copy individual extension fragments to destination', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS });
     // README.md is the catalog — should be copied
     const catalogExists = await fs
@@ -156,13 +156,13 @@ describe('extensions', () => {
       .then(() => true)
       .catch(() => false);
     expect(catalogExists, 'extensions/README.md (catalog) should exist').toBe(true);
-    // Individual fragments should NOT be copied
+    // Individual fragments SHOULD be copied so the sdd skill can merge them on-demand
     for (const ext of EXTENSIONS) {
       const fragExists = await fs
         .access(path.join(tmpDir, `specs/templates/extensions/${ext.id}.md`))
         .then(() => true)
         .catch(() => false);
-      expect(fragExists, `extensions/${ext.id}.md fragment should NOT be copied at destination`).toBe(false);
+      expect(fragExists, `extensions/${ext.id}.md fragment should exist at destination`).toBe(true);
     }
   });
 

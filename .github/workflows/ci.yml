@@ -30,7 +30,8 @@ jobs:
           test -f .claude/skills/sdd/SKILL.md
           test -f specs/templates/extensions/README.md
           test ! -f .gitignore.additions
-          test ! -f specs/templates/extensions/multi-tenant.md
+          test -f specs/templates/extensions/multi-tenant.md
+          test -f specs/templates/extensions/persistent-data.md
           ! grep -q "{{PROJECT_NAME}}" CLAUDE.md
           ! grep -q "## Multi-tenant boundary" specs/templates/feature.spec.md
           echo "Lean smoke OK"
