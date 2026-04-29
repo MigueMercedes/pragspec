@@ -41,7 +41,7 @@ describe('installTemplates', () => {
       'specs/features/README.md',
       'specs/features/.gitkeep',
       'docs/adr/0000-template.md',
-      'docs/runbooks/.gitkeep',
+      'docs/runbooks/README.md',
       '.claude/skills/sdd/SKILL.md',
     ];
 
@@ -77,6 +77,19 @@ describe('installTemplates', () => {
     expect(claudeMd).not.toContain('{{STACK}}');
   });
 
+  it('leaves free-form placeholders unresolved when not provided', async () => {
+    // Mirrors what bin/cli.js passes: only the deterministic placeholders.
+    // The sdd skill detects unresolved {{X}} as "first-time setup needed".
+    await installTemplates({
+      cwd: tmpDir,
+      vars: { PROJECT_NAME: 'test-app', STACK: 'Node.js' },
+    });
+    const claudeMd = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
+    expect(claudeMd).toContain('{{PROJECT_DESCRIPTION}}');
+    expect(claudeMd).toContain('{{REPO_LAYOUT}}');
+    expect(claudeMd).toContain('{{CONSTRAINTS}}');
+  });
+
   it('skipOnly mode only installs the sdd skill', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS, skillOnly: true });
 
@@ -110,6 +123,28 @@ describe('installTemplates', () => {
 
     const after = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
     expect(after).toContain('# CLAUDE.md — test-app');
+  });
+
+  it('writes a .bak before overwriting an existing file', async () => {
+    const original = '# my custom CLAUDE.md\nlots of important content';
+    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), original);
+
+    await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'overwrite' });
+
+    const bak = await fs.readFile(path.join(tmpDir, 'CLAUDE.md.bak'), 'utf8');
+    expect(bak).toBe(original);
+  });
+
+  it('does NOT write a .bak when onConflict=skip', async () => {
+    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), '# kept');
+
+    await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'skip' });
+
+    const bakExists = await fs
+      .access(path.join(tmpDir, 'CLAUDE.md.bak'))
+      .then(() => true)
+      .catch(() => false);
+    expect(bakExists).toBe(false);
   });
 
   it('does NOT copy .gitignore.additions to destination (it is a source-only file)', async () => {
