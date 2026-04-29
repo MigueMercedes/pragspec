@@ -119,12 +119,14 @@ program
 
     const stackLabel = STACK_LABELS[answers.stack] || answers.stack;
 
+    // Resolve only the placeholders the CLI knows for sure. Free-form ones
+    // ({{PROJECT_DESCRIPTION}}, {{REPO_LAYOUT}}, {{CONSTRAINTS}}) are left as
+    // literal {{X}} so the `sdd` skill can detect "first-time setup needed"
+    // by grepping for unresolved placeholders, then fill them by reading the
+    // codebase and asking the user.
     const vars = {
       PROJECT_NAME: answers.projectName,
-      PROJECT_DESCRIPTION: '<one-line description of your project — fill in via the `sdd` skill>',
       STACK: stackLabel,
-      REPO_LAYOUT: '<repo layout — fill in via the `sdd` skill after first run>',
-      CONSTRAINTS: '<project-specific constraints — fill in via the `sdd` skill>',
     };
 
     if (answers.extensions.length) {

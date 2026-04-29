@@ -77,6 +77,19 @@ describe('installTemplates', () => {
     expect(claudeMd).not.toContain('{{STACK}}');
   });
 
+  it('leaves free-form placeholders unresolved when not provided', async () => {
+    // Mirrors what bin/cli.js passes: only the deterministic placeholders.
+    // The sdd skill detects unresolved {{X}} as "first-time setup needed".
+    await installTemplates({
+      cwd: tmpDir,
+      vars: { PROJECT_NAME: 'test-app', STACK: 'Node.js' },
+    });
+    const claudeMd = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
+    expect(claudeMd).toContain('{{PROJECT_DESCRIPTION}}');
+    expect(claudeMd).toContain('{{REPO_LAYOUT}}');
+    expect(claudeMd).toContain('{{CONSTRAINTS}}');
+  });
+
   it('skipOnly mode only installs the sdd skill', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS, skillOnly: true });
 
