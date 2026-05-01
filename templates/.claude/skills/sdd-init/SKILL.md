@@ -132,6 +132,7 @@ Flag sections of `AGENTS.md` that an agent does not use. Be **conservative** —
 - Domain glossary / terminology specific to the product.
 - Constraints, tradeoffs, "why we don't do X" notes.
 - Repo layout, even if long.
+- `## Available Skills` section — it is the canonical companion-skill registry that `sdd` references at runtime. Do not remove or shrink it; if a skill name is outdated, fix it as a drift correction (Pass 1) instead.
 
 When in doubt, keep it.
 

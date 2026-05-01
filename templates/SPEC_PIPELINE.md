@@ -118,7 +118,7 @@ flowchart TD
 
 **Applies to**: all modes. This is the gate before claiming "done".
 
-**Recommended skill**: `superpowers:verification-before-completion`.
+**Recommended skill**: see [`AGENTS.md` §Available Skills](./AGENTS.md#available-skills) (VERIFY stage). The companion skill, if installed, automates this gate; otherwise apply the checklist below.
 
 **Mandatory checklist**:
 - [ ] Tests of the affected module pass locally
@@ -129,7 +129,7 @@ flowchart TD
 - [ ] If DB schema changed: migration tested locally (up + down + idempotence)
 - [ ] If external integration: tested with sandbox/staging of the provider
 
-**No claim "done" without evidence.** The `verification-before-completion` skill requires showing the actual command output.
+**No claim "done" without evidence.** The companion verification skill (when installed) requires showing the actual command output; the embedded fallback applies the same standard manually.
 
 ---
 
@@ -192,4 +192,4 @@ specs/
 
 ## When to escalate to a planning skill
 
-For non-trivial tasks (>1 day estimated, multi-file, non-obvious side effects), use `superpowers:writing-plans` BEFORE Step 1. The resulting plan feeds the SPEC with much better context.
+For non-trivial tasks (>1 day estimated, multi-file, non-obvious side effects), use the planning companion skill **before** Step 1 — see [`AGENTS.md` §Available Skills](./AGENTS.md#available-skills) (Pre-SPEC planning stage). The resulting plan feeds the SPEC with much better context. If no planning skill is installed, outline the scope in 5-10 bullets with the user before drafting the spec.

@@ -118,17 +118,26 @@ your codebase. Common constraints to document:
 | `sdd-init` | Customizes this `AGENTS.md` after install (replaces `{{PLACEHOLDERS}}`, proposes extensions, drafts the first ADR). Re-invoke later for a refresh — audits drift and bloat, proposes targeted edits. |
 | `sdd` | Entry point for any non-trivial task — decides FULL/FAST/SHORT-CIRCUIT mode and orchestrates the pipeline. |
 
-If you also have the [`superpowers`](https://github.com/obra/superpowers) plugin installed, these companion skills pair well with the SDD pipeline. **They are optional** — `sdd` works without them by handling each step inline.
+### Companion skills (optional, recommended)
 
-| Skill (optional) | When to use |
-|---|---|
-| `superpowers:brainstorming` | Before generating non-trivial specs — explore requirements |
-| `superpowers:test-driven-development` | When applying test-first (services, endpoints, bug fixes) |
-| `superpowers:verification-before-completion` | Step 5 of pipeline — before claiming done |
-| `superpowers:systematic-debugging` | Any bug/test failure before proposing fix |
-| `superpowers:writing-plans` | Before touching code in multi-step tasks |
+If you have the [`superpowers`](https://github.com/obra/superpowers) plugin installed, these skills pair tightly with the SDD pipeline. **They are optional** — `sdd` works without them by handling each step inline. The `sdd` skill references this table at runtime: when a step says `[if available: superpowers:X]`, invoke X if installed; otherwise follow the embedded flow.
 
-Add your project-specific skills in `.claude/skills/<name>/SKILL.md` and document them here.
+| Pipeline stage | Skill | Role |
+|---|---|---|
+| Pre-SPEC (intent) | `superpowers:brainstorming` | Explore requirements before non-trivial specs |
+| Pre-SPEC (planning) | `superpowers:writing-plans` | Multi-day / multi-file tasks; plan feeds the spec |
+| Pre-IMPLEMENT | `superpowers:executing-plans` | Execute a written plan with review checkpoints |
+| TESTS | `superpowers:test-driven-development` | Enforce test-first where Selective TDD applies |
+| IMPLEMENT (bugs) | `superpowers:systematic-debugging` | Any bug / test failure before proposing fix |
+| VERIFY | `superpowers:verification-before-completion` | Evidence-based "done" gate at end of pipeline |
+| Pre-PR | `superpowers:requesting-code-review` | Self-review before opening PR |
+| Workspace setup | `superpowers:using-git-worktrees` | Isolate feature work in its own worktree |
+
+If a skill above is missing, `sdd` falls back to the inline guidance in its `SKILL.md` and in `SPEC_PIPELINE.md`. No configuration needed — the model checks the skill list at runtime.
+
+### Project-specific skills
+
+Add your own under `.claude/skills/<name>/SKILL.md` and document them above.
 
 ---
 
@@ -142,7 +151,7 @@ Before claiming "done" on any FULL or FAST task:
 4. **Smoke test if UI changed**: navigate the affected flow on staging/local
 5. **Migration tested if DB schema changed**: up + down + idempotence
 
-→ Skill `superpowers:verification-before-completion` enforces this systematically.
+See §Available Skills above for the companion skill that automates this gate.
 
 ---
 

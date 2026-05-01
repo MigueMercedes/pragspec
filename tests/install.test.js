@@ -191,6 +191,72 @@ describe('installTemplates', () => {
   });
 });
 
+describe('companion skill canonicalization', () => {
+  const COMPANIONS = [
+    'brainstorming',
+    'writing-plans',
+    'executing-plans',
+    'test-driven-development',
+    'systematic-debugging',
+    'verification-before-completion',
+    'requesting-code-review',
+    'using-git-worktrees',
+  ];
+
+  it('AGENTS.md lists every companion skill under §Available Skills', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const agents = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    expect(agents).toContain('### Companion skills');
+    for (const s of COMPANIONS) {
+      expect(agents, `AGENTS.md missing superpowers:${s}`).toContain(`superpowers:${s}`);
+    }
+  });
+
+  it('sdd/SKILL.md declares the [if available: ...] convention and references AGENTS.md', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const sdd = await fs.readFile(
+      path.join(tmpDir, '.claude/skills/sdd/SKILL.md'),
+      'utf8',
+    );
+    expect(sdd).toContain('Companion skill convention');
+    expect(sdd).toContain('[if available: superpowers:');
+    expect(sdd).toContain('AGENTS.md');
+    // No duplicate canonical table — verification skill should not appear more than
+    // a handful of times (we expect 2-3 inline references max, not a full table).
+    const verifyMentions = (
+      sdd.match(/superpowers:verification-before-completion/g) || []
+    ).length;
+    expect(verifyMentions).toBeLessThanOrEqual(4);
+  });
+
+  it('SPEC_PIPELINE.md Step 5 redirects to AGENTS.md instead of naming the skill directly', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const pipe = await fs.readFile(path.join(tmpDir, 'SPEC_PIPELINE.md'), 'utf8');
+    const step5Start = pipe.indexOf('## Step 5');
+    const step5End = pipe.indexOf('## Storage', step5Start);
+    expect(step5Start).toBeGreaterThan(-1);
+    expect(step5End).toBeGreaterThan(step5Start);
+    const step5 = pipe.slice(step5Start, step5End);
+    expect(step5).toContain('AGENTS.md');
+  });
+
+  it('AGENTS.md (template) and the framework README.md mention the same set of superpowers skills (sync guard)', async () => {
+    // Sync between two PUBLIC surfaces of the framework:
+    // - AGENTS.md installed in the user's project (the runtime canonical list)
+    // - README.md of the claude-sdd repo (what users read on GitHub before installing)
+    // Both must agree on which companion skills the framework references.
+    // The user's own project README (templates/README.md.tmpl → README.md at destination)
+    // is intentionally NOT in this guard — it's the user's surface and stays clean.
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const agents = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+    const repoReadme = await fs.readFile(path.join(repoRoot, 'README.md'), 'utf8');
+    const agentsSet = new Set(agents.match(/superpowers:[a-z-]+/g) ?? []);
+    const repoReadmeSet = new Set(repoReadme.match(/superpowers:[a-z-]+/g) ?? []);
+    expect(agentsSet).toEqual(repoReadmeSet);
+  });
+});
+
 describe('extensions', () => {
   it('exports a non-empty catalog', () => {
     expect(EXTENSIONS.length).toBeGreaterThan(0);

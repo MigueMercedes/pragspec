@@ -39,6 +39,14 @@ jobs:
           test -f specs/templates/extensions/persistent-data.md
           ! grep -q "{{PROJECT_NAME}}" AGENTS.md
           ! grep -q "## Multi-tenant boundary" specs/templates/feature.spec.md
+          # Companion-skill canonicalization: AGENTS.md is the single source
+          grep -q "### Companion skills" AGENTS.md
+          grep -q "superpowers:executing-plans" AGENTS.md
+          grep -q "superpowers:requesting-code-review" AGENTS.md
+          grep -q "superpowers:using-git-worktrees" AGENTS.md
+          # sdd skill declares the [if available: ...] convention
+          grep -q "Companion skill convention" .claude/skills/sdd/SKILL.md
+          grep -q "\[if available: superpowers:" .claude/skills/sdd/SKILL.md
           echo "Lean smoke OK"
 
       - name: Smoke — with extensions

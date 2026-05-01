@@ -28,6 +28,18 @@ The `sdd-init` skill handles first-time setup (and later refreshes). Don't try t
 
 ---
 
+## Companion skill convention
+
+Throughout the pipeline below you will see lines tagged `[if available: superpowers:X]` followed by an `[embedded fallback]`. The convention:
+
+1. Check the skill list in your current `system-reminder`.
+2. If `superpowers:X` is present, invoke it via the `Skill` tool — it handles the step.
+3. If it is not present, follow the `[embedded fallback]` line — usually a prompt under `specs/prompts/` or an inline checklist.
+
+The canonical mapping of stages → companion skills lives in [`AGENTS.md` §Available Skills](../../../AGENTS.md#available-skills). Do not duplicate or rewrite it elsewhere; reference it.
+
+---
+
 ## Step 1: classify the mode
 
 Apply this decision tree:
@@ -82,50 +94,64 @@ For FULL/FAST: also read
 
 ### FULL pipeline
 
-```
-1. SPEC      → use specs/prompts/spec-generator.md, output to specs/features/<area>/<slug>.spec.md
-2. REVIEW    → use specs/prompts/spec-reviewer.md, edit the same spec with Review notes section
-3. TESTS     → use specs/prompts/test-generator.md, respect Selective TDD
-4. IMPLEMENT → use specs/prompts/implementation.md, respect project architecture
-5. VERIFY    → use superpowers:verification-before-completion
-```
+For complex tasks (>1 day estimated, multi-file), do BEFORE Step 1:
 
-For complex tasks (>1 day estimated, multi-file): invoke `superpowers:writing-plans` BEFORE Step 1. The resulting plan feeds the spec.
+- `[if available: superpowers:writing-plans]` → write the plan first; the plan feeds the spec
+- `[if available: superpowers:using-git-worktrees]` → isolate the work in its own worktree
+- `[embedded fallback]` → ask the user to outline scope in 5-10 bullets, then proceed
+
+Then:
+
+1. **SPEC**
+   - `[if available: superpowers:brainstorming]` → explore intent + requirements first
+   - `[embedded fallback]` → use `specs/prompts/spec-generator.md`, output to `specs/features/<area>/<slug>.spec.md`
+2. **REVIEW**
+   - `[embedded only]` → use `specs/prompts/spec-reviewer.md`, edit the same spec with `## Review notes` section
+3. **TESTS**
+   - `[if available: superpowers:test-driven-development]` → drives test-first per Selective TDD
+   - `[embedded fallback]` → use `specs/prompts/test-generator.md`, respect Selective TDD
+4. **IMPLEMENT**
+   - `[if available + you have a plan: superpowers:executing-plans]` → execute with review checkpoints
+   - `[if bug fix: superpowers:systematic-debugging]` → diagnose before proposing a fix
+   - `[embedded fallback]` → use `specs/prompts/implementation.md`, respect ADRs and project architecture
+5. **VERIFY**
+   - `[if available: superpowers:verification-before-completion]` → preferred; evidence before assertions
+   - `[embedded fallback]` → tests pass + lint clean + CI green + (smoke if UI) + (migration if schema)
+
+After VERIFY, before opening PR:
+
+- `[if available: superpowers:requesting-code-review]` → self-review against the spec
 
 ### FAST pipeline
 
-```
-1. SPEC minimal → only Context + Validation Rules + Edge Cases + Errors + Tests strategy. Output to specs/features/<area>/<slug>.spec.md anyway
-2. TESTS        → failing-test-first if it's a bug, test-first if new validation
-3. IMPLEMENT    → respect architecture and ADRs
-4. VERIFY       → tests + lint + CI green
-```
+1. **SPEC minimal**
+   - `[embedded only]` → only Context + Validation Rules + Edge Cases + Errors + Tests strategy. Output to `specs/features/<area>/<slug>.spec.md` anyway. Skip brainstorming — FAST is for bugs / refinements with clear scope.
+2. **TESTS**
+   - `[if available: superpowers:test-driven-development]` → drives failing-test-first for bugs, test-first for new validation
+   - `[embedded fallback]` → write a failing test reproducing the bug, then proceed
+3. **IMPLEMENT**
+   - `[if bug fix: superpowers:systematic-debugging]` → diagnose before fix
+   - `[embedded fallback]` → respect architecture and ADRs
+4. **VERIFY**
+   - `[if available: superpowers:verification-before-completion]` → preferred
+   - `[embedded fallback]` → tests + lint + CI green
 
 Skip formal review — review happens in commit message.
 
 ### SHORT-CIRCUIT pipeline
 
-```
-1. IMPLEMENT direct
-2. VERIFY: existing tests pass + lint clean + CI green
-```
+1. **IMPLEMENT** direct
+2. **VERIFY**
+   - `[if available: superpowers:verification-before-completion]` → preferred even for short tasks
+   - `[embedded fallback]` → existing tests pass + lint clean + CI green
 
 Skip everything else. DO NOT write spec — would be noise.
 
 ---
 
-## Step 4: applicable skills
+## Step 4: project-specific skills
 
-Identify and use relevant skills based on the area of change:
-
-| Your change touches... | Use skill |
-|---|---|
-| Project-specific patterns | Look for skills in `.claude/skills/` of your project |
-| Bug debugging | `superpowers:systematic-debugging` |
-| TDD enforcement | `superpowers:test-driven-development` |
-| Verification at the end | `superpowers:verification-before-completion` |
-| Brainstorming requirements | `superpowers:brainstorming` |
-| Multi-step plan | `superpowers:writing-plans` |
+Beyond the companion skills referenced inline above (canonical list in [`AGENTS.md` §Available Skills](../../../AGENTS.md#available-skills)), check `.claude/skills/` in this project for skills specific to your domain — billing, auth, multi-tenant, etc. Apply them in the relevant step.
 
 ---
 
@@ -183,12 +209,12 @@ Diff summary + paths
 
 ## How to invoke downstream pipeline
 
-When you've decided the mode, do not implement directly: invoke the corresponding prompt:
+When you've decided the mode, do not implement directly. For each step, prefer the companion skill if available; otherwise apply the embedded prompt:
 
-- For **SPEC**: read `specs/prompts/spec-generator.md` and apply
-- For **REVIEW**: read `specs/prompts/spec-reviewer.md` and apply
-- For **TESTS**: read `specs/prompts/test-generator.md` and apply
-- For **IMPLEMENT**: read `specs/prompts/implementation.md` and apply
-- For **VERIFY**: invoke skill `superpowers:verification-before-completion`
+- **SPEC**: `[if available: superpowers:brainstorming]` → then `specs/prompts/spec-generator.md`. If not available, just `specs/prompts/spec-generator.md`.
+- **REVIEW**: `specs/prompts/spec-reviewer.md` (no companion skill — embedded only).
+- **TESTS**: `[if available: superpowers:test-driven-development]` → then `specs/prompts/test-generator.md`. If not available, just `specs/prompts/test-generator.md`.
+- **IMPLEMENT**: `[if available + plan exists: superpowers:executing-plans]`; `[if bug: superpowers:systematic-debugging]` → then `specs/prompts/implementation.md`. If neither companion is available, just `specs/prompts/implementation.md`.
+- **VERIFY**: `[if available: superpowers:verification-before-completion]`. If not available, run the embedded checklist from `SPEC_PIPELINE.md` Step 5.
 
-The prompt of each step has the project context already embedded (set by `/sdd-init`), you don't need to re-explain it.
+The prompts of each step have the project context already embedded (set by `/sdd-init`), so you don't need to re-explain it.

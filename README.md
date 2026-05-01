@@ -392,7 +392,7 @@ This is where the framework earns its keep at the per-task level.
 - Loads the relevant context files (AGENTS.md, ADRs, related specs)
 - Walks through the corresponding pipeline
 - Outputs in the standardized format (FINAL SPEC → REVIEW → TESTS → IMPL → VERIFY)
-- At the end, invokes the verification skill if you have `superpowers:verification-before-completion` installed
+- Throughout the pipeline, invokes companion skills (brainstorming, TDD, verification, etc.) when they're installed — falls back to the embedded flow otherwise
 - If `sdd` sees unresolved `{{PLACEHOLDERS}}` in `AGENTS.md`, it tells the user to run `/sdd-init` first instead of trying to do that work itself.
 
 ### When NOT to invoke
@@ -401,13 +401,23 @@ Pure conversational queries — "what does X do", "where does Y live", "explain 
 
 ### Working alongside other skills
 
-The `sdd` skill orchestrates; it doesn't reinvent. Recommended companion skills (you install separately):
+The `sdd` skill orchestrates; it doesn't reinvent. If you have the [`superpowers`](https://github.com/obra/superpowers) plugin installed, `sdd` invokes these companions automatically at the right pipeline stage. If you don't, the pipeline keeps working — it falls back to the embedded flow inline.
 
-- `superpowers:brainstorming` — runs before SPEC for non-trivial features
-- `superpowers:test-driven-development` — runs during TESTS step
-- `superpowers:verification-before-completion` — runs at VERIFY step
-- `superpowers:systematic-debugging` — replaces FAST mode for hairy bugs
-- `superpowers:writing-plans` — runs before SPEC for multi-day work
+**Pre-SPEC**
+- `superpowers:brainstorming` — explore intent + requirements before non-trivial specs
+- `superpowers:writing-plans` — multi-day / multi-file tasks; the plan feeds the spec
+- `superpowers:using-git-worktrees` — isolate the feature work in its own worktree
+
+**During the pipeline**
+- `superpowers:test-driven-development` — drives the TESTS step under Selective TDD
+- `superpowers:executing-plans` — runs IMPLEMENT step against a written plan with checkpoints
+- `superpowers:systematic-debugging` — diagnoses bugs before proposing a fix (FAST mode)
+- `superpowers:verification-before-completion` — gates VERIFY with evidence before assertions
+
+**Pre-PR**
+- `superpowers:requesting-code-review` — self-review against the spec before opening the PR
+
+The full mapping (with stages and fallback behavior) lives in `AGENTS.md` §Available Skills after install. The `sdd` skill checks the available-skills list at runtime — no configuration needed.
 
 ## FAQ
 
