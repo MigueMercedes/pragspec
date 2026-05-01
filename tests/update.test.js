@@ -10,7 +10,7 @@ import { updateProject, isClaudeSddProject } from '../lib/update.js';
 let tmpDir;
 
 beforeEach(async () => {
-  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'claude-sdd-update-test-'));
+  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'leanspec-update-test-'));
 });
 
 afterEach(async () => {

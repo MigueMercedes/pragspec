@@ -101,12 +101,12 @@ jobs:
           echo "$out" | grep -q "Nothing to do"
           echo "Update smoke OK"
 
-      - name: Smoke — update fails fast outside a claude-sdd project
+      - name: Smoke — update fails fast outside a leanspec project
         run: |
           TMP=$(mktemp -d)
           cd "$TMP"
           if node ${{ github.workspace }}/bin/cli.js update --yes 2>/dev/null; then
-            echo "ERROR: update should have failed in non-claude-sdd directory"
+            echo "ERROR: update should have failed in non-leanspec directory"
             exit 1
           fi
           echo "Update fail-fast OK"

@@ -1,10 +1,10 @@
 {
-  "name": "claude-sdd",
-  "version": "0.1.1",
-  "description": "Pragmatic Spec-Driven Development framework for Claude Code — npm CLI that scaffolds the full SDD pipeline (specs, prompts, skill, ADR/runbook conventions) into any project",
+  "name": "leanspec",
+  "version": "0.2.0",
+  "description": "Pragmatic Spec-Driven Development — npm CLI that scaffolds the SDD pipeline (specs, prompts, skills, ADR/runbook conventions) into any project. Tool-agnostic via AGENTS.md.",
   "type": "module",
   "bin": {
-    "claude-sdd": "./bin/cli.js"
+    "leanspec": "./bin/cli.js"
   },
   "files": [
     "bin/",
@@ -21,22 +21,25 @@
     "node": ">=18"
   },
   "keywords": [
-    "claude",
-    "claude-code",
     "sdd",
     "spec-driven-development",
     "scaffolding",
-    "ai-coding"
+    "ai-coding",
+    "agents-md",
+    "claude-code",
+    "codex",
+    "cursor",
+    "gemini-cli"
   ],
   "author": "Miguel Mercedes <lmyguel0324@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MigueMercedes/claude-sdd.git"
+    "url": "git+https://github.com/MigueMercedes/leanspec.git"
   },
-  "homepage": "https://github.com/MigueMercedes/claude-sdd#readme",
+  "homepage": "https://github.com/MigueMercedes/leanspec#readme",
   "bugs": {
-    "url": "https://github.com/MigueMercedes/claude-sdd/issues"
+    "url": "https://github.com/MigueMercedes/leanspec/issues"
   },
   "dependencies": {
     "commander": "^12.1.0",
