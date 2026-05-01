@@ -21,8 +21,8 @@ const STACK_LABELS = {
 
 function printBanner() {
   console.log('');
-  console.log(kleur.bold().magenta('  claude-sdd ') + kleur.dim(`v${pkg.version}`));
-  console.log(kleur.dim('  Pragmatic Spec-Driven Development for Claude Code'));
+  console.log(kleur.bold().magenta('  leanspec ') + kleur.dim(`v${pkg.version}`));
+  console.log(kleur.dim('  Pragmatic Spec-Driven Development — tool-agnostic via AGENTS.md'));
   console.log('');
 }
 
@@ -42,8 +42,8 @@ function printNextSteps(repoUrl) {
 const program = new Command();
 
 program
-  .name('claude-sdd')
-  .description('Scaffold the Pragmatic SDD framework into a project for Claude Code.')
+  .name('leanspec')
+  .description('Scaffold the Pragmatic SDD framework into a project — tool-agnostic via AGENTS.md.')
   .version(pkg.version);
 
 program
@@ -156,7 +156,7 @@ program
       }
     }
 
-    printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/claude-sdd');
+    printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/leanspec');
   });
 
 program
@@ -178,9 +178,9 @@ program
     if (!(await isClaudeSddProject(cwd))) {
       console.error(
         kleur.red('Error:') +
-          ' this directory does not look like a claude-sdd project (no `.claude/skills/sdd/SKILL.md`).'
+          ' this directory does not look like a leanspec project (no `.claude/skills/sdd/SKILL.md`).'
       );
-      console.error(kleur.dim('  Run `npx claude-sdd init` first.'));
+      console.error(kleur.dim('  Run `npx leanspec init` first.'));
       process.exit(1);
     }
 
